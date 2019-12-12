@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2018-12-21 18:22:06.916.cpp,C:\Users\Develop_JY\Documents\RAD Studio\Projects\Unit1.cpp=C:\Users\Develop_JY\Desktop\12FtpService\f_MainForm.cpp</Transaction>
+    <Transaction>2018-12-21 18:22:06.916.h,C:\Users\Develop_JY\Documents\RAD Studio\Projects\Unit1.h=C:\Users\Develop_JY\Desktop\12FtpService\f_MainForm.h</Transaction>
+    <Transaction>2018-12-21 18:22:06.916.dfm,C:\Users\Develop_JY\Documents\RAD Studio\Projects\Unit1.dfm=C:\Users\Develop_JY\Desktop\12FtpService\f_MainForm.dfm</Transaction>
+    <Transaction>2018-12-21 18:22:12.947.cbproj,C:\Users\Develop_JY\Documents\RAD Studio\Projects\Project1.cbproj=C:\Users\Develop_JY\Desktop\12FtpService\Project1.cbproj</Transaction>
+    <Transaction>2018-12-24 11:24:30.048.cpp,C:\Users\Develop_JY\Desktop\12FtpService\Unit1.cpp=C:\Users\Develop_JY\Desktop\12FtpService\f_ftpConn.cpp</Transaction>
+    <Transaction>2018-12-24 11:24:30.048.h,C:\Users\Develop_JY\Desktop\12FtpService\Unit1.h=C:\Users\Develop_JY\Desktop\12FtpService\f_ftpConn.h</Transaction>
+    <Transaction>2018-12-24 11:36:38.441.cpp,C:\Users\Develop_JY\Desktop\12FtpService\Unit1.cpp=C:\Users\Develop_JY\Desktop\12FtpService\encoding_utf8_ansi.cpp</Transaction>
+    <Transaction>2018-12-24 11:36:38.441.h,C:\Users\Develop_JY\Desktop\12FtpService\Unit1.h=C:\Users\Develop_JY\Desktop\12FtpService\encoding_utf8_ansi.h</Transaction>
+    <Transaction>2018-12-24 13:51:05.188.cpp,C:\Users\Develop_JY\Desktop\12FtpService\Unit1.cpp=C:\Users\Develop_JY\Desktop\12FtpService\f_localConn.cpp</Transaction>
+    <Transaction>2018-12-24 13:51:05.188.h,C:\Users\Develop_JY\Desktop\12FtpService\Unit1.h=C:\Users\Develop_JY\Desktop\12FtpService\f_localConn.h</Transaction>
+    <Transaction>2018-12-27 09:29:52.751.jpg,D:\builder_c++_practice\2010\12 12.1 LandOfficeStartUp\EXEC\IMAGE\StartUp\index_bg.jpg=</Transaction>
+    <Transaction>2019-01-02 13:58:14.786.cpp,C:\Users\Develop_JY\Desktop\12FtpService\f_ftpConn.cpp=</Transaction>
+    <Transaction>2019-01-02 13:58:24.802.cpp,C:\Users\Develop_JY\Desktop\12FtpService\Unit2.cpp=C:\Users\Develop_JY\Desktop\12FtpService\f_FtpConn.cpp</Transaction>
+    <Transaction>2019-01-02 13:58:24.802.h,C:\Users\Develop_JY\Desktop\12FtpService\Unit2.h=C:\Users\Develop_JY\Desktop\12FtpService\f_FtpConn.h</Transaction>
+    <Transaction>2019-01-02 13:58:24.802.dfm,C:\Users\Develop_JY\Desktop\12FtpService\Unit2.dfm=C:\Users\Develop_JY\Desktop\12FtpService\f_FtpConn.dfm</Transaction>
+    <Transaction>2019-01-02 13:58:43.597.cpp,C:\Users\Develop_JY\Desktop\12FtpService\f_FtpConn.cpp=C:\Users\Develop_JY\Desktop\12FtpService\f_ftpConn.cpp</Transaction>
+    <Transaction>2019-01-02 13:58:43.597.h,C:\Users\Develop_JY\Desktop\12FtpService\f_FtpConn.h=C:\Users\Develop_JY\Desktop\12FtpService\f_ftpConn.h</Transaction>
+    <Transaction>2019-01-02 13:58:43.597.dfm,C:\Users\Develop_JY\Desktop\12FtpService\f_FtpConn.dfm=C:\Users\Develop_JY\Desktop\12FtpService\f_ftpConn.dfm</Transaction>
+    <Transaction>2019-01-07 13:57:45.937.cpp,D:\builder_c++_practice\2010\2019\01.FtpService\Unit2.cpp=D:\builder_c++_practice\2010\2019\01.FtpService\f_CreateDir.cpp</Transaction>
+    <Transaction>2019-01-07 13:57:45.937.h,D:\builder_c++_practice\2010\2019\01.FtpService\Unit2.h=D:\builder_c++_practice\2010\2019\01.FtpService\f_CreateDir.h</Transaction>
+    <Transaction>2019-01-07 13:57:45.937.dfm,D:\builder_c++_practice\2010\2019\01.FtpService\Unit2.dfm=D:\builder_c++_practice\2010\2019\01.FtpService\f_CreateDir.dfm</Transaction>
+    <Transaction>2019-01-08 15:31:21.717.cbproj,D:\builder_c++_practice\2010\2019\01.FtpService\Project1.cbproj=D:\builder_c++_practice\2010\2019\01.FtpService\파일서버접속프로그램.cbproj</Transaction>
+    <Transaction>2019-01-08 15:53:41.952.cbproj,D:\builder_c++_practice\2010\2019\01.FtpService\파일서버접속프로그램.cbproj=D:\builder_c++_practice\2010\2019\01.FtpService\ftpConnP.cbproj</Transaction>
+    <Transaction>2019-01-09 08:51:50.782.cpp,D:\builder_c++_practice\2010\2019\01.FtpService(alftp)\f_localConn.cpp=</Transaction>
+    <Transaction>2019-01-11 11:59:12.628.cpp,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\f_CreateDir.cpp=</Transaction>
+    <Transaction>2019-01-11 11:59:12.628.dfm,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\f_CreateDir.dfm=</Transaction>
+    <Transaction>2019-01-16 13:49:29.729.cpp,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\Unit2.cpp=D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\f_downPath.cpp</Transaction>
+    <Transaction>2019-01-16 13:49:29.729.h,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\Unit2.h=D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\f_downPath.h</Transaction>
+    <Transaction>2019-01-16 13:49:29.729.dfm,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\Unit2.dfm=D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\f_downPath.dfm</Transaction>
+    <Transaction>2019-01-17 15:38:39.638.cpp,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\encoding_utf8_ansi.cpp=</Transaction>
+    <Transaction>2019-01-18 13:40:33.314.cpp,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\f_downPath.cpp=</Transaction>
+    <Transaction>2019-01-18 13:40:33.314.dfm,D:\builder_c++_practice\2010\2019\01.FtpService(alftp_virtual)\f_downPath.dfm=</Transaction>
+    <Transaction>2019-02-19 17:05:49.577.c,D:\builder_c++_practice\2010\2019\01.FtpService\01.FtpService(alftp_virtual)\DragAndDrop.c=</Transaction>
+    <Transaction>2019-02-19 17:06:44.399.h,D:\builder_c++_practice\2010\2019\01.FtpService\01.FtpService(alftp_virtual)\DragAndDrop.h=</Transaction>
+  </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="ftpConnP.cpp"/>
+    <File Path="ftpConnP.res"/>
+    <File Path="f_ftpConn.cpp"/>
+    <File Path="f_ftpConn.cpp"/>
+    <File Path="f_ftpConn.dfm"/>
+    <File Path="f_ftpConn.h"/>
+    <File Path="f_MainForm.cpp"/>
+    <File Path="f_MainForm.cpp"/>
+    <File Path="f_MainForm.dfm"/>
+    <File Path="f_MainForm.h"/>
+    <File Path="C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\wininet.lib"/>
+  </ProjectSortOrder>
+</BorlandProject>

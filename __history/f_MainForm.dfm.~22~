@@ -1,0 +1,752 @@
+object Form1: TForm1
+  Left = 460
+  Top = 145
+  Caption = #54028#51068#49436#48260#51217#49549#54532#47196#44536#47016
+  ClientHeight = 621
+  ClientWidth = 913
+  Color = clBtnFace
+  Font.Charset = HANGEUL_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = #44404#47548#52404
+  Font.Style = []
+  Menu = MainMenu1
+  OldCreateOrder = False
+  Position = poDesigned
+  OnClose = FormClose
+  OnResize = FormResize
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 11
+  object AllPanel: TPanel
+    Left = 0
+    Top = 0
+    Width = 913
+    Height = 599
+    Align = alClient
+    BevelOuter = bvNone
+    TabOrder = 0
+    object ListBox1: TListBox
+      Left = 327
+      Top = 7
+      Width = 10
+      Height = 10
+      ItemHeight = 11
+      TabOrder = 0
+      Visible = False
+    end
+    object ListBox2: TListBox
+      Left = 327
+      Top = 23
+      Width = 11
+      Height = 10
+      ItemHeight = 11
+      TabOrder = 1
+      Visible = False
+    end
+    object InfoPanel: TPanel
+      Left = 0
+      Top = 0
+      Width = 913
+      Height = 41
+      Align = alTop
+      BevelOuter = bvNone
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = #44404#47548#52404
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 2
+      object Label3: TLabel
+        Left = 11
+        Top = 12
+        Width = 49
+        Height = 13
+        Caption = #50500#51060#54588':'
+      end
+      object Label4: TLabel
+        Left = 203
+        Top = 12
+        Width = 56
+        Height = 13
+        Caption = #50500#51060#46356': '
+      end
+      object Label5: TLabel
+        Left = 395
+        Top = 11
+        Width = 70
+        Height = 13
+        Caption = #48708#48128#48264#54840': '
+      end
+      object Label6: TLabel
+        Left = 600
+        Top = 11
+        Width = 42
+        Height = 13
+        Caption = #54252#53944': '
+      end
+      object Edit1: TEdit
+        Left = 63
+        Top = 8
+        Width = 121
+        Height = 21
+        TabOrder = 0
+        TextHint = 'IP'#47484' '#51077#47141#54616#49464#50836
+      end
+      object Edit2: TEdit
+        Left = 256
+        Top = 8
+        Width = 121
+        Height = 21
+        TabOrder = 1
+        TextHint = 'ID'#47484' '#51077#47141#54616#49464#50836
+      end
+      object Edit3: TEdit
+        Left = 461
+        Top = 8
+        Width = 121
+        Height = 21
+        PasswordChar = #9679
+        TabOrder = 2
+        TextHint = #48708#48128#48264#54840#47484' '#51077#47141
+        OnKeyUp = Edit3KeyUp
+      end
+      object Edit4: TEdit
+        Left = 640
+        Top = 8
+        Width = 53
+        Height = 21
+        NumbersOnly = True
+        TabOrder = 3
+        OnKeyUp = Edit4KeyUp
+      end
+      object Button1: TButton
+        Left = 711
+        Top = 7
+        Width = 75
+        Height = 25
+        Caption = #50672#44208
+        TabOrder = 4
+        OnClick = Button1Click
+      end
+      object CheckBox1: TCheckBox
+        Left = 798
+        Top = 10
+        Width = 90
+        Height = 17
+        Caption = #54056#49884#48652' '#47784#46300
+        TabOrder = 5
+      end
+    end
+    object ExplorerPanel: TPanel
+      Left = 0
+      Top = 41
+      Width = 913
+      Height = 558
+      Align = alClient
+      BevelOuter = bvNone
+      Caption = 'ExplorerPanel'
+      Padding.Left = 3
+      Padding.Right = 3
+      TabOrder = 3
+      object Splitter1: TSplitter
+        Left = 203
+        Top = 68
+        Height = 490
+        AutoSnap = False
+        Beveled = True
+        MinSize = 100
+        ResizeStyle = rsUpdate
+        ExplicitLeft = 301
+        ExplicitTop = 64
+        ExplicitHeight = 692
+      end
+      object Splitter2: TSplitter
+        Left = 3
+        Top = 65
+        Width = 907
+        Height = 3
+        Cursor = crVSplit
+        Align = alTop
+        AutoSnap = False
+        Beveled = True
+        MinSize = 50
+        ResizeStyle = rsUpdate
+        ExplicitLeft = -3
+        ExplicitTop = 115
+        ExplicitWidth = 966
+      end
+      object TreePanel: TPanel
+        Left = 3
+        Top = 68
+        Width = 200
+        Height = 490
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alLeft
+        BevelOuter = bvNone
+        Caption = 'Panel3'
+        TabOrder = 0
+        object TreeView2: TTreeView
+          Left = 0
+          Top = 0
+          Width = 200
+          Height = 490
+          Align = alClient
+          Enabled = False
+          HideSelection = False
+          Images = iconSmall
+          Indent = 20
+          RowSelect = True
+          TabOrder = 0
+          OnMouseUp = TreeView2MouseUp
+        end
+      end
+      object ListViewPanel: TPanel
+        Left = 206
+        Top = 68
+        Width = 704
+        Height = 490
+        Align = alClient
+        BevelOuter = bvNone
+        TabOrder = 1
+        object Splitter3: TSplitter
+          Left = 411
+          Top = 58
+          Height = 432
+          Align = alRight
+          AutoSnap = False
+          Beveled = True
+          MinSize = 200
+          ResizeStyle = rsUpdate
+          Visible = False
+          ExplicitLeft = 401
+          ExplicitTop = 52
+        end
+        object ListView2: TListView
+          Left = 0
+          Top = 58
+          Width = 411
+          Height = 432
+          Align = alClient
+          BiDiMode = bdLeftToRight
+          Columns = <
+            item
+              Caption = #54028#51068#47749
+              Width = 270
+            end
+            item
+              Alignment = taRightJustify
+              Caption = #53356#44592
+              Width = 130
+            end
+            item
+              Alignment = taCenter
+              Caption = #54028#51068#50976#54805
+              Width = 100
+            end
+            item
+              Caption = #52572#51333' '#49688#51221
+              Width = 200
+            end>
+          DoubleBuffered = False
+          DragMode = dmAutomatic
+          Enabled = False
+          LargeImages = iconBig
+          MultiSelect = True
+          OwnerData = True
+          RowSelect = True
+          ParentBiDiMode = False
+          ParentDoubleBuffered = False
+          PopupMenu = lv2PopUpMenu
+          ShowWorkAreas = True
+          SmallImages = iconSmall
+          TabOrder = 0
+          ViewStyle = vsReport
+          OnClick = ListView2Click
+          OnColumnClick = ListView2ColumnClick
+          OnContextPopup = ListView2ContextPopup
+          OnData = ListView2Data
+          OnDblClick = ListView2DblClick
+          OnEdited = ListView2Edited
+          OnDragDrop = ListView2DragDrop
+          OnDragOver = ListView2DragOver
+          OnKeyUp = ListView2KeyUp
+          OnMouseUp = ListView2MouseUp
+        end
+        object Panel1: TPanel
+          Left = 0
+          Top = 33
+          Width = 704
+          Height = 25
+          Align = alTop
+          BevelOuter = bvNone
+          Caption = 'Panel1'
+          Padding.Top = 3
+          Padding.Bottom = 3
+          TabOrder = 1
+          object PathBox: TEdit
+            Left = 80
+            Top = 3
+            Width = 624
+            Height = 19
+            Align = alClient
+            BevelInner = bvNone
+            BevelOuter = bvNone
+            Font.Charset = ANSI_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = #44404#47548#52404
+            Font.Style = []
+            ParentFont = False
+            ReadOnly = True
+            TabOrder = 0
+            ExplicitHeight = 21
+          end
+          object Panel2: TPanel
+            Left = 0
+            Top = 3
+            Width = 80
+            Height = 19
+            Align = alLeft
+            BevelEdges = []
+            BevelOuter = bvNone
+            Caption = #54788#51116#50948#52824':'
+            Font.Charset = ANSI_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = #46027#50880#52404
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 1
+          end
+        end
+        object ListView3: TListView
+          Left = 0
+          Top = 58
+          Width = 4
+          Height = 15
+          Columns = <
+            item
+              Caption = 'File_Path'
+            end
+            item
+              Caption = 'File_Kinds'
+            end
+            item
+              Caption = 'File_Size'
+            end>
+          TabOrder = 2
+          ViewStyle = vsReport
+          Visible = False
+        end
+        object Panel3: TPanel
+          Left = 0
+          Top = 0
+          Width = 704
+          Height = 33
+          Align = alTop
+          BevelEdges = [beBottom]
+          BevelKind = bkFlat
+          BevelOuter = bvNone
+          Padding.Top = 1
+          Padding.Bottom = 1
+          ParentBackground = False
+          TabOrder = 3
+          object renameButton: TButton
+            Left = 300
+            Top = 1
+            Width = 80
+            Height = 29
+            Align = alLeft
+            Caption = #51060#47492' '#48148#44984#44592
+            Enabled = False
+            TabOrder = 0
+            OnClick = renameButtonClick
+          end
+          object Panel4: TPanel
+            Left = 160
+            Top = 1
+            Width = 30
+            Height = 29
+            Align = alLeft
+            BevelOuter = bvNone
+            TabOrder = 1
+          end
+          object downloadButton: TButton
+            Left = 80
+            Top = 1
+            Width = 80
+            Height = 29
+            Align = alLeft
+            Caption = #45796#50868#47196#46300
+            Enabled = False
+            TabOrder = 2
+            OnClick = downloadButtonClick
+          end
+          object Panel5: TPanel
+            Left = 270
+            Top = 1
+            Width = 30
+            Height = 29
+            Align = alLeft
+            BevelOuter = bvNone
+            TabOrder = 3
+          end
+          object deleteButton: TButton
+            Left = 190
+            Top = 1
+            Width = 80
+            Height = 29
+            Align = alLeft
+            Caption = #49325'    '#51228
+            Enabled = False
+            TabOrder = 4
+            OnClick = deleteButtonClick
+          end
+          object Panel6: TPanel
+            Left = 380
+            Top = 1
+            Width = 30
+            Height = 29
+            Align = alLeft
+            BevelOuter = bvNone
+            TabOrder = 5
+          end
+          object preViewButton: TButton
+            Left = 520
+            Top = 1
+            Width = 80
+            Height = 29
+            Align = alLeft
+            Caption = #48120#47532#48372#44592
+            TabOrder = 6
+            OnClick = preViewButtonClick
+          end
+          object Panel7: TPanel
+            Left = 50
+            Top = 1
+            Width = 30
+            Height = 29
+            Align = alLeft
+            BevelOuter = bvNone
+            TabOrder = 7
+          end
+          object Panel8: TPanel
+            Left = 10
+            Top = 1
+            Width = 40
+            Height = 29
+            Align = alLeft
+            BevelOuter = bvNone
+            TabOrder = 8
+            object SpeedButton1: TSpeedButton
+              Left = 0
+              Top = 0
+              Width = 40
+              Height = 29
+              Align = alClient
+              Glyph.Data = {
+                26040000424D2604000000000000360000002800000012000000120000000100
+                180000000000F0030000C40E0000C40E00000000000000000000FFFFFFFFFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFECECEC3131
+                31F0F0F0FFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDCDCDC1010100000001F1F1FE6E6E6FF
+                FFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFFFEDEDED111111000000000000000000C8C8C8FFFFFFFFFFFFFFFFFF
+                0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFECECEC000000
+                000000000000010101DDDDDDFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDCDCDC101010000000000000000000DDDD
+                DDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFECECEC101010000000000000000000CACACAFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFECECEC00000000
+                0000000000010101DDDDDDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                0000FFFFFFFFFFFFFFFFFFFFFFFFDCDCDC101010000000000000000000DDDDDD
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFF
+                FFFFFFD5D5D50B0B0B0000000000000C0C0CD3D3D3FFFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFD6D6D60B0B
+                0B0000000000000C0C0CD3D3D3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFDCDCDC11111100000000
+                0000000000DDDDDDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEDEDED000000000000000000010101
+                DDDDDDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFEDEDED101010000000000000000000CACACAFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFFFFFFFDCDCDC111111000000000000000000DDDDDDFFFFFFFFFFFFFF
+                FFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                FFFFEDEDED000000000000000000010101DDDDDDFFFFFFFFFFFFFFFFFFFFFFFF
+                0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEDEDED
+                111111000000000000000000C8C8C8FFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDCDCDC1010100000
+                001F1F1FE6E6E6FFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEDEDED313131F0F0F0FFFFFFFF
+                FFFFFFFFFFFFFFFF0000}
+              OnMouseDown = SpeedButton1MouseDown
+              OnMouseUp = SpeedButton1MouseUp
+              ExplicitLeft = 5
+              ExplicitTop = 4
+              ExplicitWidth = 30
+              ExplicitHeight = 25
+            end
+          end
+          object Panel9: TPanel
+            Left = 0
+            Top = 1
+            Width = 10
+            Height = 29
+            Align = alLeft
+            BevelOuter = bvNone
+            TabOrder = 9
+          end
+          object Panel11: TPanel
+            Left = 490
+            Top = 1
+            Width = 30
+            Height = 29
+            Align = alLeft
+            BevelOuter = bvNone
+            TabOrder = 10
+          end
+          object createDirButton: TButton
+            Left = 410
+            Top = 1
+            Width = 80
+            Height = 29
+            Align = alLeft
+            Caption = #49352#54260#45908' '#49373#49457
+            Enabled = False
+            TabOrder = 11
+            OnClick = createDirButtonClick
+          end
+        end
+        object copyFileList: TListView
+          Left = 10
+          Top = 58
+          Width = 0
+          Height = 15
+          Columns = <
+            item
+              Caption = 'File_Name'
+            end
+            item
+              Caption = 'File_Kinds'
+            end
+            item
+              Caption = 'File_Size'
+            end
+            item
+              Caption = 'File_Path'
+            end>
+          TabOrder = 4
+          ViewStyle = vsReport
+          Visible = False
+        end
+        object moveFileList: TListBox
+          Left = 4
+          Top = 61
+          Width = 2
+          Height = 12
+          ItemHeight = 11
+          TabOrder = 5
+          Visible = False
+        end
+        object preViewPanel: TPanel
+          Left = 414
+          Top = 58
+          Width = 290
+          Height = 432
+          Margins.Left = 0
+          Margins.Top = 0
+          Margins.Right = 5
+          Margins.Bottom = 0
+          Align = alRight
+          BevelOuter = bvLowered
+          Caption = 'preViewPanel'
+          Color = clBtnHighlight
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 6
+          Visible = False
+          OnResize = preViewPanelResize
+          object Image1: TImage
+            Left = 1
+            Top = 1
+            Width = 288
+            Height = 430
+            Align = alClient
+            AutoSize = True
+            Center = True
+            Stretch = True
+            ExplicitLeft = -4
+            ExplicitTop = -68
+            ExplicitWidth = 185
+            ExplicitHeight = 105
+          end
+          object preViewLabel: TLabel
+            Left = 48
+            Top = 30
+            Width = 6
+            Height = 11
+            Color = clWhite
+            ParentColor = False
+            Transparent = True
+          end
+        end
+      end
+      object Memo1: TMemo
+        Left = 3
+        Top = 0
+        Width = 907
+        Height = 65
+        Align = alTop
+        HideSelection = False
+        ReadOnly = True
+        ScrollBars = ssVertical
+        TabOrder = 2
+        WordWrap = False
+      end
+    end
+  end
+  object statusPanel: TPanel
+    Left = 0
+    Top = 599
+    Width = 913
+    Height = 22
+    Align = alBottom
+    BevelOuter = bvNone
+    Padding.Left = 5
+    TabOrder = 1
+    object StatusBar1: TStatusBar
+      Left = 5
+      Top = 0
+      Width = 908
+      Height = 22
+      Align = alClient
+      Panels = <>
+      SimplePanel = True
+    end
+  end
+  object MainMenu1: TMainMenu
+    AutoHotkeys = maManual
+    Left = 19
+    Top = 48
+    object N1: TMenuItem
+      Caption = #54028#51068
+      object openExplorer: TMenuItem
+        Caption = #53456#49353#44592' '#50676#44592
+        OnClick = N1Click
+      end
+      object exitMenu: TMenuItem
+        Caption = #51333#47308
+        OnClick = exitMenuClick
+      end
+    end
+    object N3: TMenuItem
+      Caption = #54868#47732
+      object iconView: TMenuItem
+        Caption = #50500#51060#53080' '#48372#44592' '#48169#49885
+        object N4: TMenuItem
+          Caption = #53360' '#50500#51060#53080' '#48372#44592
+          RadioItem = True
+          OnClick = N4Click
+        end
+        object N6: TMenuItem
+          Caption = #51088#49464#55176' '#48372#44592
+          Checked = True
+          Default = True
+          RadioItem = True
+          OnClick = N6Click
+        end
+      end
+      object N5: TMenuItem
+        Caption = #54868#47732' '#54200#51665
+        object infoMenu: TMenuItem
+          Caption = #50672#44208' '#51077#47141#51460
+          Checked = True
+          OnClick = infoMenuClick
+        end
+        object memoMenu: TMenuItem
+          Caption = #47700#49464#51648' '#47196#44536
+          Checked = True
+          OnClick = memoMenuClick
+        end
+        object treeViewMenu: TMenuItem
+          Caption = #54260#45908' '#53944#47532
+          Checked = True
+          OnClick = treeViewMenuClick
+        end
+      end
+      object N2: TMenuItem
+        Caption = #51064#53076#46377' '#48169#49885
+        object EUCKR1: TMenuItem
+          Caption = 'EUC-KR'
+          Checked = True
+          Default = True
+          RadioItem = True
+          OnClick = EUCKR1Click
+        end
+        object UTF81: TMenuItem
+          Caption = 'UTF-8'
+          RadioItem = True
+          OnClick = UTF81Click
+        end
+      end
+    end
+  end
+  object lv2PopUpMenu: TPopupMenu
+    AutoHotkeys = maManual
+    AutoLineReduction = maManual
+    Left = 144
+    Top = 48
+    object lv2download: TMenuItem
+      Caption = #49440#53469#54028#51068'('#54260#45908') '#45796#50868#47196#46300
+      OnClick = lv2downloadClick
+    end
+    object lv2delete: TMenuItem
+      Caption = #49440#53469#54028#51068'('#54260#45908') '#49325#51228
+      OnClick = lv2deleteClick
+    end
+    object lv2copyFile: TMenuItem
+      Caption = #48373#49324
+      OnClick = lv2copyFileClick
+    end
+    object lv2pasteFile: TMenuItem
+      Caption = #48537#50668#45347#44592
+      OnClick = lv2pasteFileClick
+    end
+    object lv2CreateDir: TMenuItem
+      Caption = #49352#54260#45908' '#49373#49457
+      OnClick = lv2CreateDirClick
+    end
+    object lv2Rename: TMenuItem
+      Caption = #51060#47492' '#48148#44984#44592
+      OnClick = lv2RenameClick
+    end
+  end
+  object iconBig: TImageList
+    ColorDepth = cd32Bit
+    Height = 32
+    Masked = False
+    Width = 32
+    Left = 72
+    Top = 48
+  end
+  object iconSmall: TImageList
+    ColorDepth = cd32Bit
+    Left = 208
+    Top = 48
+  end
+  object IdEncode: TIdEncoderMIME
+    FillChar = '='
+    Left = 272
+    Top = 48
+  end
+  object IdDecode: TIdDecoderMIME
+    FillChar = '='
+    Left = 320
+    Top = 48
+  end
+end

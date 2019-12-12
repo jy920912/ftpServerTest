@@ -1,0 +1,956 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "f_FtpConn.h"
+#include "f_MainForm.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+#pragma warn -8004
+TFtpConn *FtpConn;
+//---------------------------------------------------------------------------
+__fastcall TFtpConn::TFtpConn(TComponent* Owner)
+	: TForm(Owner)
+{
+	downCancel = 0;
+	downCount  = 0;
+	downCountFull = 0;
+}
+//ftp 연결(passive, active모드)
+bool __fastcall TFtpConn::func_ftpConnect(AnsiString IP, AnsiString PORT, AnsiString ID, AnsiString PW, int MODE) //0->Active
+{                                                                                                                 //0x08000000->Passive
+	HFtp_Session = ::InternetOpen("FTP CLIENT TEST", INTERNET_OPEN_TYPE_DIRECT, NULL, 0, 0);   //세선연결
+	if(HFtp_Session == NULL) return false;
+		HFtp_Connection = ::InternetConnect(HFtp_Session,IP.c_str(),StrToInt(PORT),ID.c_str(),PW.c_str(),INTERNET_SERVICE_FTP,MODE,0);
+	if(HFtp_Connection == NULL){
+		return false;
+	}
+	return true;
+}
+//------------------------------------------------------------------------------
+//ftp 초기화(접속 해제)
+void __fastcall TFtpConn::func_ftpInit()
+{
+	if(HFtp_Connection != NULL) ::InternetCloseHandle(HFtp_Connection);
+	if(HFtp_Session != NULL) ::InternetCloseHandle(HFtp_Session);
+	HFtp_Connection = NULL;
+	HFtp_Session = NULL;
+}
+//------------------------------------------------------------------------------
+//ftp 구조체(vector) 초기화
+void __fastcall TFtpConn::func_initStruct()
+{
+	ftpfileValue.fileName.clear();
+	ftpfileValue.fileName.reserve(0);
+	ftpfileValue.fileSize.clear();
+	ftpfileValue.fileSize.reserve(0);
+	ftpfileValue.fileType.clear();
+	ftpfileValue.fileType.reserve(0);
+	ftpfileValue.fileTime.clear();
+	ftpfileValue.fileTime.reserve(0);
+	ftpfileValue.fileIcon.clear();
+	ftpfileValue.fileIcon.reserve(0);
+}
+//------------------------------------------------------------------------------
+//현재 디렉토리 내 파일(폴더) 검색
+bool __fastcall TFtpConn::func_GetFTPFileList(AnsiString Dir, FTPFILEVALUE *ftpfileValue)
+{
+	int ico = 0;
+	unsigned long temp_Length = INTERNET_MAX_PATH_LENGTH;
+	char temp_path[INTERNET_MAX_PATH_LENGTH];
+	SYSTEMTIME systemtime;
+	SYSTEMTIME localtime;
+	AnsiString s_temp;
+	if(Form1->EUCKR1->Checked)
+	{
+		s_temp = Dir;
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		s_temp = ANSIToUTF8(Dir.c_str());
+	}
+	if(!FtpSetCurrentDirectory(HFtp_Connection,s_temp.c_str()))
+	{
+    	return false;
+	}
+	if(::FtpGetCurrentDirectory(HFtp_Connection, temp_path, &temp_Length)) //현재 FTP 디렉토리 가져오기(temp_path)
+	{
+		AnsiString tPath = temp_path;
+		if(tPath != "/")
+		{   //FTP루트디렉토리와 지금 디렉토리가 같지 않으면 .. 추가
+			ftpfileValue->fileName.push_back("상위폴더로 이동");
+			ftpfileValue->fileSize.push_back("");
+			ftpfileValue->fileType.push_back("");
+			ftpfileValue->fileTime.push_back("");
+			ftpfileValue->fileIcon.push_back(0);
+		}
+        WIN32_FIND_DATA find_data;
+
+		HINTERNET H_Find_File = ::FtpFindFirstFile(HFtp_Connection, "*.*", &find_data, 0,0); //H_Find_File에 파일 속성 대입
+		if(H_Find_File != NULL)
+		{
+			do{
+				if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{   //디렉토리면
+					if(Form1->EUCKR1->Checked)
+						ftpfileValue->fileName.push_back(find_data.cFileName);
+					else if(Form1->UTF81->Checked)
+					ftpfileValue->fileName.push_back(UTF8ToANSI(find_data.cFileName));
+					ftpfileValue->fileSize.push_back("");
+					ftpfileValue->fileType.push_back("폴  더");
+					FileTimeToSystemTime(&find_data.ftLastWriteTime,&systemtime);
+					ftpfileValue->fileTime.push_back(DateTimeToStr(SystemTimeToDateTime(systemtime)));
+					ftpfileValue->fileIcon.push_back(0);
+				}
+				else
+				{   //파일이면
+					if(Form1->EUCKR1->Checked)
+					{
+						ftpfileValue->fileName.push_back(find_data.cFileName);
+						ftpfileValue->fileIcon.push_back(Form1->func_ftpIconAdd(ExtractFileExt(find_data.cFileName)));
+					}
+					else if(Form1->UTF81->Checked)
+					{
+						ftpfileValue->fileName.push_back(UTF8ToANSI(find_data.cFileName));
+						ftpfileValue->fileIcon.push_back(Form1->func_ftpIconAdd(ExtractFileExt(UTF8ToANSI(find_data.cFileName))));
+					}
+					ULONGLONG sizeR = ((ULONGLONG)find_data.nFileSizeHigh*((ULONGLONG)MAXDWORD+1))+(ULONGLONG)find_data.nFileSizeLow;
+					ftpfileValue->fileSize.push_back(sizeR);
+					ftpfileValue->fileType.push_back("파  일");
+					FileTimeToSystemTime(&find_data.ftLastWriteTime,&systemtime);
+					SystemTimeToTzSpecificLocalTime(NULL, &systemtime, &localtime);
+					ftpfileValue->fileTime.push_back(DateTimeToStr(SystemTimeToDateTime(systemtime)));
+
+				}
+
+            }while(::InternetFindNextFile(H_Find_File, &find_data));   //다음파일 없을때 까지
+		}
+		::InternetCloseHandle(H_Find_File);
+		H_Find_File = NULL;
+	}
+	else return false;
+
+	return true;
+}
+
+//------------------------------------------------------------------------------
+//-----------------------업로드, 다운로드, 삭제---------------------------------
+//------------------------------------------------------------------------------
+//파일 업로드
+bool __fastcall TFtpConn::func_fileUpLoad(AnsiString fileName, AnsiString path)
+{
+	this->Caption = "업로드 중...";
+	Label1->Caption = "업로드중입니다. 잠시만 기다려주세요...";
+	Label2->Caption = fileName;
+	ProgressBar1->Max = 10000;
+	ProgressBar1->Position = 0;
+	AnsiString pluscount = "("+IntToStr(downCount)+"/"+IntToStr(downCountFull)+")";
+	Label4->Caption = pluscount;
+	char buffer[2048];
+	DWORD read_size = 0, write_size = 0;			//localfile, ftpfile 2KB씩 읽기
+	ULONGLONG full_size = 0, total_write_size = 0;  //localfile, ftpfile 전체 사이즈
+	WIN32_FIND_DATA file_data;
+	::FindFirstFile(fileName.c_str(), &file_data);
+	HINTERNET mh_ftp_file = NULL;
+	if(Form1->EUCKR1->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, path.c_str(),GENERIC_WRITE,  //FTP 파일 열기(ANSI)
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, ANSIToUTF8(path.c_str()).c_str(),GENERIC_WRITE,  //FTP 파일 열기(UTF8)
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	if(mh_ftp_file == NULL)
+	{
+		return false;
+	}
+	FILE *mh_local_file = fopen(fileName.c_str(), "rb");             //Local파일 열기
+	ULONGLONG highSize = (ULONGLONG)MAXDWORD+1;
+	full_size =	((ULONGLONG)file_data.nFileSizeHigh*highSize)+(ULONGLONG)file_data.nFileSizeLow;
+	do{
+		if(downCancel == 1)
+		{
+			fclose(mh_local_file);
+			mh_local_file = NULL;
+			InternetCloseHandle(mh_ftp_file);
+			mh_ftp_file = NULL;
+			bool fdf = FtpDeleteFile(HFtp_Connection, path.c_str());
+			return false;
+		}
+		try{
+			read_size = fread(buffer, 1, 2048, mh_local_file);                  //Local파일 2KB씩 열기
+		}catch(...){
+			fclose(mh_local_file);
+			mh_local_file = NULL;
+			InternetCloseHandle(mh_ftp_file);
+			mh_ftp_file = NULL;
+			this->Close();
+			return false;
+		}
+		if(read_size > 0)
+		{
+			InternetWriteFile(mh_ftp_file, buffer, read_size, &write_size); //Local파일 읽은 것을 FTP파일에 쓰기
+			total_write_size += (ULONGLONG)write_size;
+			int a = ProgressBar1->Position*10000/ProgressBar1->Max;
+			int b = (__int64)total_write_size*10000/(__int64)full_size;
+			if(a <= b)
+				ProgressBar1->Position++;
+		}
+		Application->ProcessMessages();
+	}while(full_size != total_write_size);
+	//전송 완료되면
+	FtpConn->ProgressBar2->Position++;
+	fclose(mh_local_file);
+	mh_local_file = NULL;
+	::InternetCloseHandle(mh_ftp_file);
+	mh_ftp_file = NULL;
+
+	return true;
+}
+//------------------------------------------------------------------------------
+//파일 다운로드
+bool __fastcall TFtpConn::func_fileDownLoad(AnsiString fileName, AnsiString path, ULONGLONG Size)
+{
+	this->Caption = "다운로드 중...";
+	Label1->Caption = "다운로드중입니다. 잠시만 기다려주세요...";
+	Label2->Caption = fileName;
+	AnsiString pluscount = "("+IntToStr(downCount)+"/"+IntToStr(downCountFull)+")";
+	Label4->Caption = pluscount;
+	ProgressBar1->Max = 10000;
+	ProgressBar1->Position = 0;
+	char buffer[2048];
+	DWORD read_size = 0; //ftpfile 2KB씩 읽기
+	ULONGLONG full_size = 0, total_read_size = 0; //ftpfile, localfile fullsize;
+	HINTERNET mh_ftp_file = NULL;
+	WIN32_FIND_DATA file_data;
+
+	if(Form1->EUCKR1->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, path.c_str(),GENERIC_READ,  //FTP 파일 열기(ANSI)
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, ANSIToUTF8(path.c_str()).c_str(),GENERIC_READ,  //FTP 파일 열기(UTF8)
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	if(mh_ftp_file == NULL)
+	{
+		return false;
+	}
+	FILE *mh_local_file = fopen(fileName.c_str(), "wb");                       //Local파일 열기
+	full_size = (ULONGLONG)Size;
+	do{
+		if(downCancel == 1)
+		{
+			fclose(mh_local_file);
+			mh_local_file = NULL;
+			InternetCloseHandle(mh_ftp_file);
+			mh_ftp_file = NULL;
+			this->Close();
+			DeleteFile(fileName);
+			return false;
+		}
+		if(InternetReadFile(mh_ftp_file, buffer, 2048, &read_size) == true)
+		{
+			try{
+				fwrite(buffer, read_size, 1, mh_local_file);                        //읽은 FTP파일을 Local파일에 쓰기
+				total_read_size += read_size;
+				int a = ProgressBar1->Position*10000/ProgressBar1->Max;
+				int b = (__int64)total_read_size*10000/(__int64)full_size;
+				if(a <= b) ProgressBar1->Position++;
+			}catch(...){
+				fclose(mh_local_file);
+				mh_local_file = NULL;
+				InternetCloseHandle(mh_ftp_file);
+				mh_ftp_file = NULL;
+				return false;
+			}
+		}
+		Application->ProcessMessages();
+	}while(total_read_size != full_size);
+	//전송 완료 시
+	FtpConn->ProgressBar2->Position++;
+	fclose(mh_local_file);
+	mh_local_file = NULL;
+	InternetCloseHandle(mh_ftp_file);
+	mh_ftp_file = NULL;
+	return true;
+}
+//------------------------------------------------------------------------------
+//ftp파일 제거
+bool __fastcall TFtpConn::func_deleteFile(AnsiString Path)
+{
+	bool fdf = false;
+	if(Form1->EUCKR1->Checked)
+	{
+		fdf = FtpDeleteFile(HFtp_Connection, Path.c_str());
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		fdf = FtpDeleteFile(HFtp_Connection, ANSIToUTF8(Path.c_str()).c_str());
+	}
+	if(!fdf) return false;
+	return true;
+}
+//------------------------------------------------------------------------------
+//ftp폴더 제거
+bool __fastcall TFtpConn::func_deleteDir(AnsiString Path)
+{
+	bool fdd = false;
+	if(Form1->EUCKR1->Checked)
+	{
+		fdd = FtpRemoveDirectoryA(HFtp_Connection, Path.c_str());
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		fdd = FtpRemoveDirectoryA(HFtp_Connection, ANSIToUTF8(Path.c_str()).c_str());
+	}
+	if(!fdd) return false;
+	return true;
+}
+//------------------------------------------------------------------------------
+//---------------------------폴더 하부 전체 검색--------------------------------
+//------------------------------------------------------------------------------
+//폴더 다운로드 시 선택한 ftp 폴더 하부 전체 검색
+bool __fastcall TFtpConn::func_ftpFindFiles(AnsiString Path, AnsiString ftpPath,
+										vector<String> *v_localPath, vector<String> *v_ftpPath, vector<__int64> *v_size)
+{
+	unsigned long temp_Length = INTERNET_MAX_PATH_LENGTH;
+	char temp_path[INTERNET_MAX_PATH_LENGTH];
+	CreateDir(Path);//localdirectory create
+	AnsiString s_temp;
+	if(Form1->EUCKR1->Checked)
+	{
+		s_temp = ftpPath;
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		s_temp = ANSIToUTF8(ftpPath.c_str());
+	}
+	int fSuccess = ::FtpSetCurrentDirectory(HFtp_Connection, s_temp.c_str());
+	::FtpGetCurrentDirectory(HFtp_Connection, temp_path, &temp_Length);
+	int fileSearchCount = 0;
+	if (fSuccess == 0)
+	{
+		return false;
+	}
+
+	HANDLE fileHandle;
+	WIN32_FIND_DATA ftpFileData;
+	ftpFileData.dwFileAttributes = 0;
+	fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+		INTERNET_FLAG_NO_CACHE_WRITE, 0);
+	if (fileHandle == NULL)  //file not exist
+	{
+		FtpSetCurrentDirectory(HFtp_Connection, "..");
+		::InternetCloseHandle(fileHandle);
+		fileHandle = NULL;
+		return false;
+	}
+	if (ftpFileData.dwFileAttributes == 0)  //not file in directory
+	{
+		FtpSetCurrentDirectory(HFtp_Connection, "..");
+		::InternetCloseHandle(fileHandle);
+		fileHandle = NULL;
+		return false;
+	}
+	do {
+		if (ftpFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)  //direcrory
+		{
+			if(strcmp(ftpFileData.cFileName, ".") == 0) continue;
+			else if(strcmp(ftpFileData.cFileName, "상위폴더로 이동") == 0) continue;
+			else
+			{
+				::InternetCloseHandle(fileHandle);
+				fileHandle = NULL;
+				fileSearchCount++;
+					AnsiString s_fileName = ftpFileData.cFileName;
+					if(Form1->UTF81->Checked)
+					{
+						s_fileName = UTF8ToANSI(ftpFileData.cFileName);
+					}
+				func_ftpFindFiles(Path + "\\" + s_fileName,
+								ftpPath + "/" + s_fileName, v_localPath, v_ftpPath, v_size);
+				fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+					INTERNET_FLAG_NO_CACHE_WRITE, 0);
+				int fileSearchCountTemp = 0;
+				while (fileSearchCountTemp < fileSearchCount - 1)
+				{
+					::InternetFindNextFile(fileHandle, &ftpFileData);
+					fileSearchCountTemp++;
+				}
+			}
+		}
+		else //file
+		{
+			AnsiString s_ftpFileName = "";
+			if(Form1->EUCKR1->Checked)
+			{
+				s_ftpFileName = ftpFileData.cFileName;
+			}
+			else if(Form1->UTF81->Checked)
+			{
+				s_ftpFileName = UTF8ToANSI(ftpFileData.cFileName);
+            }
+			v_localPath->push_back(Path + "\\" + s_ftpFileName);
+			v_ftpPath->push_back(ftpPath + "/" + s_ftpFileName);
+			v_size->push_back(((ULONGLONG)ftpFileData.nFileSizeHigh*((ULONGLONG)MAXDWORD+1))+(ULONGLONG)ftpFileData.nFileSizeLow);
+			fileSearchCount++;
+		}
+	}while (::InternetFindNextFile(fileHandle, &ftpFileData));
+
+	FtpSetCurrentDirectory(HFtp_Connection, "..");
+	::InternetCloseHandle(fileHandle);
+	fileHandle = NULL;
+	return true;
+}
+//------------------------------------------------------------------------------
+//폴더 업로드 시 선택한 local폴더 하부 전체 검색
+bool __fastcall TFtpConn::func_localFindAllFiles(AnsiString Path, AnsiString ftpPath,
+									vector<String> *v_localPath, vector<String> *v_ftpPath)
+{
+	HANDLE hSrch;
+	WIN32_FIND_DATA localFileData;
+	if(Form1->EUCKR1->Checked)
+	{
+		FtpCreateDirectoryA(HFtp_Connection,ftpPath.c_str());  //ftp directory create
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		FtpCreateDirectoryA(HFtp_Connection,ANSIToUTF8(ftpPath.c_str()).c_str());  //ftp directory create
+	}
+	AnsiString newPath = Path+"\\";
+	hSrch = FindFirstFile((newPath+"*.*").c_str(), &localFileData);
+	if(hSrch == NULL)
+	{
+		v_localPath->push_back("connFalse");
+		return false;
+	}
+	do{
+		if(localFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) //directory
+		{
+			if(strcmp(localFileData.cFileName, ".") == 0) continue;
+			else if(strcmp(localFileData.cFileName, "..") == 0) continue;
+			else
+			{
+				func_localFindAllFiles(Path+"\\"+localFileData.cFileName, ftpPath+"/"+localFileData.cFileName, v_localPath, v_ftpPath);
+			}
+		}
+		else{  //file
+			v_localPath->push_back(Path+"\\"+localFileData.cFileName);
+			v_ftpPath->push_back(ftpPath+"/"+localFileData.cFileName);
+		}
+	}while(FindNextFile(hSrch, &localFileData));
+	FindClose(hSrch);
+	hSrch = NULL;
+
+	return true;
+}
+//------------------------------------------------------------------------------
+//폴더 삭제 시 선택한 ftp폴더 하부 전체 검색
+bool __fastcall TFtpConn::func_ftpdeleteFiles(AnsiString ftpPath, vector<String> *v_dirPath, vector<String> *v_ftpPath)
+{
+	unsigned long temp_Length = INTERNET_MAX_PATH_LENGTH;
+	char temp_path[INTERNET_MAX_PATH_LENGTH];
+	AnsiString s_temp;
+	if(Form1->EUCKR1->Checked)
+	{
+		s_temp = ftpPath;
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		s_temp = ANSIToUTF8(ftpPath.c_str());
+	}
+	int fSuccess = ::FtpSetCurrentDirectory(HFtp_Connection, s_temp.c_str());
+	::FtpGetCurrentDirectory(HFtp_Connection, temp_path, &temp_Length);
+	int fileSearchCount = 0;
+	if (fSuccess == 0)
+	{
+		return false;
+	}
+	v_dirPath->push_back(ftpPath);
+	HANDLE fileHandle;
+	WIN32_FIND_DATA ftpFileData;
+	ftpFileData.dwFileAttributes = 0;
+	fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+		INTERNET_FLAG_NO_CACHE_WRITE, 0);
+	if (fileHandle == NULL)  //there is no file
+	{
+		FtpSetCurrentDirectory(HFtp_Connection, "..");
+		::InternetCloseHandle(fileHandle);
+		fileHandle = NULL;
+		return false;
+	}
+	do {
+		if (ftpFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) //directory
+		{
+			if(strcmp(ftpFileData.cFileName, ".") == 0) continue;
+			else if(strcmp(ftpFileData.cFileName, "..") == 0) continue;
+			else
+			{
+				::InternetCloseHandle(fileHandle);
+				fileHandle = NULL;
+				fileSearchCount++;
+				AnsiString s_fileName = ftpFileData.cFileName;
+				if(Form1->UTF81->Checked)
+				{
+					s_fileName = UTF8ToANSI(ftpFileData.cFileName);
+				}
+				func_ftpdeleteFiles(ftpPath + "/" + s_fileName,v_dirPath, v_ftpPath);
+				fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+					INTERNET_FLAG_NO_CACHE_WRITE, 0);
+				int fileSearchCountTemp = 0;
+				while (fileSearchCountTemp < fileSearchCount - 1)
+				{
+					::InternetFindNextFile(fileHandle, &ftpFileData);
+					fileSearchCountTemp++;
+				}
+			}
+		}
+		else  //file
+		{
+			if(Form1->EUCKR1->Checked)
+			{
+				v_ftpPath->push_back(ftpPath + "/" + ftpFileData.cFileName);
+			}
+			else if(Form1->UTF81->Checked)
+			{
+            	v_ftpPath->push_back(ftpPath + "/" + UTF8ToANSI(ftpFileData.cFileName).c_str());
+			}
+
+			fileSearchCount++;
+		}
+	}
+	while (::InternetFindNextFile(fileHandle, &ftpFileData));
+
+	FtpSetCurrentDirectory(HFtp_Connection, "..");
+	::InternetCloseHandle(fileHandle);
+	fileHandle = NULL;
+	return true;
+}
+//------------------------------------------------------------------------------
+//ftp에서 ftp로 파일 복사
+bool __fastcall TFtpConn::func_fileCopy(AnsiString existPath, AnsiString newPath, ULONGLONG Size)
+{
+
+	this->Caption = "복사 중...";
+	Label1->Caption = "복사중입니다. 잠시만 기다려주세요...";
+	Label2->Caption = existPath;
+	AnsiString pluscount = "("+IntToStr(downCount)+"/"+IntToStr(downCountFull)+")";
+	Label4->Caption = pluscount;
+	Application->ProcessMessages();
+	ProgressBar1->Max = 10000;
+	ProgressBar1->Position = 0;
+	char buffer[2048];
+	DWORD read_size = 0, write_size = 0;			//localfile, ftpfile 2KB씩 읽기
+	ULONGLONG full_size = 0, total_write_size = 0;  //localfile, ftpfile 전체 사이즈
+	WIN32_FIND_DATA file_data;
+	HINTERNET mh_ftp_file = NULL;
+	if(Form1->EUCKR1->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, existPath.c_str(),GENERIC_READ,  //FTP 파일 열기
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, ANSIToUTF8(existPath.c_str()).c_str(),GENERIC_READ,  //FTP 파일 열기
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+    }
+	if(mh_ftp_file == NULL)
+	{
+		InternetCloseHandle(mh_ftp_file);
+		mh_ftp_file = NULL;
+		return false;
+	}
+	HINTERNET mh_nftp_file = NULL;
+	if(Form1->EUCKR1->Checked)
+	{
+		mh_nftp_file = FtpOpenFile(nFtp_Connection, newPath.c_str(), GENERIC_WRITE,
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		mh_nftp_file = FtpOpenFile(nFtp_Connection, ANSIToUTF8(newPath.c_str()).c_str(), GENERIC_WRITE,
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+
+	if(mh_nftp_file == NULL)
+	{
+		InternetCloseHandle(mh_ftp_file);
+		mh_ftp_file = NULL;
+		InternetCloseHandle(mh_nftp_file);
+		mh_nftp_file = NULL;
+		return false;
+    }
+	full_size = Size;
+	do{
+		if(downCancel == 1)
+		{
+			InternetCloseHandle(mh_ftp_file);
+			mh_ftp_file = NULL;
+			InternetCloseHandle(mh_nftp_file);
+			mh_nftp_file = NULL;
+			this->Close();
+			bool fdf = FtpDeleteFile(HFtp_Connection, newPath.c_str());
+			return false;
+		}
+		if(InternetReadFile(mh_ftp_file, buffer, 2048, &read_size) == true)
+		{
+			try{
+				InternetWriteFile(mh_nftp_file, buffer, read_size, &write_size);
+				total_write_size += (ULONGLONG)write_size;
+				int a = ProgressBar1->Position*10000/ProgressBar1->Max;
+				int b = (__int64)total_write_size*10000/(__int64)full_size;
+				if(a <= b)
+					ProgressBar1->Position++;
+			}catch(...){
+				InternetCloseHandle(mh_ftp_file);
+				mh_ftp_file = NULL;
+				InternetCloseHandle(mh_nftp_file);
+				mh_nftp_file = NULL;
+				this->Close();
+				return false;
+			}
+		}
+	}while(total_write_size != full_size);
+	FtpConn->ProgressBar2->Position++;
+	InternetCloseHandle(mh_ftp_file);
+	mh_ftp_file = NULL;
+	InternetCloseHandle(mh_nftp_file);
+	mh_nftp_file = NULL;
+	return true;
+}
+//------------------------------------------------------------------------------
+//ftp에서 ftp로 복사 할 파일 검색
+bool __fastcall TFtpConn::func_ftpFindCopyFiles(AnsiString newPath, AnsiString exPath,
+										vector<String> *v_exPath, vector<String> *v_newPath, vector<__int64> *v_size)
+{
+	unsigned long temp_Length = INTERNET_MAX_PATH_LENGTH;
+	char temp_path[INTERNET_MAX_PATH_LENGTH];
+	if(Form1->EUCKR1->Checked)
+	{
+		FtpCreateDirectoryA(HFtp_Connection,newPath.c_str());  //ftp directory create
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		FtpCreateDirectoryA(HFtp_Connection,ANSIToUTF8(newPath.c_str()).c_str());  //ftp directory create
+	}
+	AnsiString s_temp;
+	if(Form1->EUCKR1->Checked)
+	{
+		s_temp = exPath;
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		s_temp = ANSIToUTF8(exPath.c_str());
+	}
+	int fSuccess = ::FtpSetCurrentDirectory(HFtp_Connection, s_temp.c_str());
+	::FtpGetCurrentDirectory(HFtp_Connection, temp_path, &temp_Length);
+	int fileSearchCount = 0;
+	if (fSuccess == 0)
+	{
+		return false;
+	}
+
+	HANDLE fileHandle;
+	WIN32_FIND_DATA ftpFileData;
+	ftpFileData.dwFileAttributes = 0;
+	fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+		INTERNET_FLAG_NO_CACHE_WRITE, 0);
+	if (fileHandle == NULL)  //file not exist
+	{
+		FtpSetCurrentDirectory(HFtp_Connection, "..");
+		::InternetCloseHandle(fileHandle);
+		fileHandle = NULL;
+		return false;
+	}
+	if (ftpFileData.dwFileAttributes == 0)  //not file in directory
+	{
+		FtpSetCurrentDirectory(HFtp_Connection, "..");
+		::InternetCloseHandle(fileHandle);
+		fileHandle = NULL;
+		return false;
+	}
+	do {
+		if (ftpFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)  //direcrory
+		{
+			if(strcmp(ftpFileData.cFileName, ".") == 0) continue;
+			else if(strcmp(ftpFileData.cFileName, "상위폴더로 이동") == 0) continue;
+			else
+			{
+				::InternetCloseHandle(fileHandle);
+				fileHandle = NULL;
+				fileSearchCount++;
+
+				func_ftpFindCopyFiles(newPath + "/" + ftpFileData.cFileName,
+								exPath + "/" + ftpFileData.cFileName, v_exPath, v_newPath, v_size);
+				fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+					INTERNET_FLAG_NO_CACHE_WRITE, 0);
+				int fileSearchCountTemp = 0;
+				while (fileSearchCountTemp < fileSearchCount - 1)
+				{
+					::InternetFindNextFile(fileHandle, &ftpFileData);
+					fileSearchCountTemp++;
+				}
+			}
+		}
+		else //file
+		{
+			if(Form1->EUCKR1->Checked)
+			{
+				v_newPath->push_back(newPath + "/" + ftpFileData.cFileName);
+				v_exPath->push_back(exPath + "/" + ftpFileData.cFileName);
+			}
+			else if(Form1->UTF81->Checked)
+			{
+				v_newPath->push_back(newPath + "/" + UTF8ToANSI(ftpFileData.cFileName).c_str());
+				v_exPath->push_back(exPath + "/" + UTF8ToANSI(ftpFileData.cFileName).c_str());
+			}
+
+			v_size->push_back(((ULONGLONG)ftpFileData.nFileSizeHigh*((ULONGLONG)MAXDWORD+1))+(ULONGLONG)ftpFileData.nFileSizeLow);
+			fileSearchCount++;
+		}
+	}while (::InternetFindNextFile(fileHandle, &ftpFileData));
+
+	FtpSetCurrentDirectory(HFtp_Connection, "..");
+	::InternetCloseHandle(fileHandle);
+	fileHandle = NULL;
+	return true;
+}
+void __fastcall TFtpConn::Button1Click(TObject *Sender)
+//취소버튼 클릭
+{
+	if(Application->MessageBoxA(L"전송을 취소하시겠습니까? \r\n취소 시 일부 파일은 온전하지 않을 수 있습니다.",L"전송 취소",1 | MB_ICONQUESTION) == 2) return;
+	downCancel = 1;
+}
+//---------------------------------------------------------------------------
+bool __fastcall TFtpConn::func_ftpFileCountF(AnsiString ftpPath)
+//다운받을 파일 개수 세기
+{
+	unsigned long temp_Length = INTERNET_MAX_PATH_LENGTH;
+	char temp_path[INTERNET_MAX_PATH_LENGTH];
+	AnsiString s_temp;
+	if(Form1->EUCKR1->Checked)
+	{
+		s_temp = ftpPath;
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		s_temp = ANSIToUTF8(ftpPath.c_str());
+	}
+	int fSuccess = ::FtpSetCurrentDirectory(HFtp_Connection, s_temp.c_str());
+	::FtpGetCurrentDirectory(HFtp_Connection, temp_path, &temp_Length);
+	int fileSearchCount = 0;
+	if (fSuccess == 0)
+	{
+		return false;
+	}
+	HANDLE fileHandle;
+	WIN32_FIND_DATA ftpFileData;
+	ftpFileData.dwFileAttributes = 0;
+	fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+		INTERNET_FLAG_NO_CACHE_WRITE, 0);
+	if (fileHandle == NULL)  //file not exist
+	{
+		FtpSetCurrentDirectory(HFtp_Connection, "..");
+		::InternetCloseHandle(fileHandle);
+		fileHandle = NULL;
+		return false;
+	}
+	if (ftpFileData.dwFileAttributes == 0)  //not file in directory
+	{
+		FtpSetCurrentDirectory(HFtp_Connection, "..");
+		::InternetCloseHandle(fileHandle);
+		fileHandle = NULL;
+		return false;
+	}
+	do {
+		if (ftpFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) //directory
+		{
+			if(strcmp(ftpFileData.cFileName, ".") == 0) continue;
+			else if(strcmp(ftpFileData.cFileName, "..") == 0) continue;
+			else
+			{
+				::InternetCloseHandle(fileHandle);
+				fileHandle = NULL;
+				fileSearchCount++;
+				AnsiString s_fileName = ftpFileData.cFileName;
+				if(Form1->UTF81->Checked)
+				{
+					s_fileName = UTF8ToANSI(ftpFileData.cFileName);
+				}
+				func_ftpFileCountF(ftpPath + "/" + s_fileName);
+				fileHandle = ::FtpFindFirstFile(HFtp_Connection, "*.*", &ftpFileData,
+					INTERNET_FLAG_NO_CACHE_WRITE, 0);
+				int fileSearchCountTemp = 0;
+				while (fileSearchCountTemp < fileSearchCount - 1)
+				{
+					::InternetFindNextFile(fileHandle, &ftpFileData);
+					fileSearchCountTemp++;
+				}
+			}
+		}
+		else  //file
+		{
+			downCountFull++;
+			fileSearchCount++;
+		}
+	}
+	while (::InternetFindNextFile(fileHandle, &ftpFileData));
+
+	FtpSetCurrentDirectory(HFtp_Connection, "..");
+	::InternetCloseHandle(fileHandle);
+	fileHandle = NULL;
+	return true;
+}
+bool __fastcall TFtpConn::func_localFileCountF(AnsiString Path)
+//업로드 시 파일 개수 세기
+{
+	HANDLE hSrch;
+	WIN32_FIND_DATA localFileData;
+	AnsiString newPath = Path+"\\";
+	hSrch = FindFirstFile((newPath+"*.*").c_str(), &localFileData);
+	if(hSrch == NULL)
+	{
+		return false;
+	}
+	do{
+		if(localFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) //directory
+		{
+			if(strcmp(localFileData.cFileName, ".") == 0) continue;
+			else if(strcmp(localFileData.cFileName, "..") == 0) continue;
+			else
+			{
+				func_localFileCountF(newPath+localFileData.cFileName);
+			}
+		}
+		else{  //file
+			downCountFull++;
+		}
+	}while(FindNextFile(hSrch, &localFileData));
+	FindClose(hSrch);
+	hSrch = NULL;
+
+	return true;
+}
+//파일 미리보기
+bool __fastcall TFtpConn::func_fileReview(AnsiString fileName, AnsiString localName, ULONGLONG Size)
+{
+	this->Caption = "파일 열기 중...";
+	Label1->Caption = "파일을 열고 있습니다. 잠시만 기다려주세요...";
+	AnsiString s_tmpDir = ExtractFilePath(Application->ExeName)+"tmpDir";
+	ForceDirectories(s_tmpDir);
+	AnsiString s_tempName = s_tmpDir+"\\"+localName;
+	Label2->Caption = fileName;
+	AnsiString pluscount = "("+IntToStr(downCount)+"/"+IntToStr(downCountFull)+")";
+	Label4->Caption = pluscount;
+	ProgressBar1->Max = 10000;
+	ProgressBar1->Position = 0;
+	char buffer[2048];
+	DWORD read_size = 0; //ftpfile 2KB씩 읽기
+	ULONGLONG full_size = 0, total_read_size = 0; //ftpfile, localfile fullsize;
+	HINTERNET mh_ftp_file = NULL;
+	WIN32_FIND_DATA file_data;
+
+	if(Form1->EUCKR1->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, fileName.c_str(),GENERIC_READ,  //FTP 파일 열기(ANSI)
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	else if(Form1->UTF81->Checked)
+	{
+		mh_ftp_file = FtpOpenFile(HFtp_Connection, ANSIToUTF8(fileName.c_str()).c_str(),GENERIC_READ,  //FTP 파일 열기(UTF8)
+									FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_DONT_CACHE, 0);
+	}
+	if(mh_ftp_file == NULL)
+	{
+		return false;
+	}
+	FILE *mh_local_file = fopen(s_tempName.c_str(), "wb");                       //Local파일 열기
+	full_size = (ULONGLONG)Size;
+	do{
+		if(downCancel == 1)
+		{
+			fclose(mh_local_file);
+			mh_local_file = NULL;
+			InternetCloseHandle(mh_ftp_file);
+			mh_ftp_file = NULL;
+			this->Close();
+			return false;
+		}
+		if(InternetReadFile(mh_ftp_file, buffer, 2048, &read_size) == true)
+		{
+			try{
+				fwrite(buffer, read_size, 1, mh_local_file);                        //읽은 FTP파일을 Local파일에 쓰기
+				total_read_size += read_size;
+				int a = ProgressBar1->Position*10000/ProgressBar1->Max;
+				int b = (__int64)total_read_size*10000/(__int64)full_size;
+				if(a <= b) ProgressBar1->Position++;
+			}catch(...){
+				fclose(mh_local_file);
+				mh_local_file = NULL;
+				InternetCloseHandle(mh_ftp_file);
+				mh_ftp_file = NULL;
+				return false;
+			}
+		}
+		Application->ProcessMessages();
+	}while(total_read_size != full_size);
+	//전송 완료 시
+	FtpConn->ProgressBar2->Position++;
+	fclose(mh_local_file);
+	mh_local_file = NULL;
+	InternetCloseHandle(mh_ftp_file);
+	mh_ftp_file = NULL;
+	return true;
+}
+//---------------------------------------------------------------------------
+AnsiString __fastcall TFtpConn::UTF8ToANSI(const char *pszCode)			//UTF8 to ANSI
+{
+	BSTR    bstrWide;
+	char*   pszAnsi = NULL;
+	int     nLength;
+	AnsiString result;
+
+	nLength = MultiByteToWideChar(CP_UTF8, 0, pszCode, lstrlen(pszCode) + 1, NULL, NULL);
+	bstrWide = SysAllocStringLen(NULL, nLength);
+
+	MultiByteToWideChar(CP_UTF8, 0, pszCode, lstrlen(pszCode) + 1, bstrWide, nLength);
+
+	nLength = WideCharToMultiByte(CP_ACP, 0, bstrWide, -1, NULL, 0, NULL, NULL);
+	pszAnsi = new char[nLength];
+
+	WideCharToMultiByte(CP_ACP, 0, bstrWide, -1, pszAnsi, nLength, NULL, NULL);
+	SysFreeString(bstrWide);
+
+	result = pszAnsi;
+	delete(pszAnsi);
+	pszAnsi = NULL;
+	return result;
+}
+//---------------------------------------------------------------------------
+AnsiString __fastcall TFtpConn::ANSIToUTF8(const char * pszCode)  		//ANSI to UTF8
+{
+	int		nLength, nLength2;
+	BSTR	bstrCode;
+	char*	pszUTFCode = NULL;
+	AnsiString result;
+
+	nLength = MultiByteToWideChar(CP_ACP, 0, pszCode, lstrlen(pszCode), NULL, NULL);
+	bstrCode = SysAllocStringLen(NULL, nLength);
+	MultiByteToWideChar(CP_ACP, 0, pszCode, lstrlen(pszCode), bstrCode, nLength);
+
+	nLength2 = WideCharToMultiByte(CP_UTF8, 0, bstrCode, -1, pszUTFCode, 0, NULL, NULL);
+	pszUTFCode = new char[nLength2];
+	WideCharToMultiByte(CP_UTF8, 0, bstrCode, -1, pszUTFCode, nLength2, NULL, NULL);
+
+	result = pszUTFCode;
+	delete pszUTFCode;
+	pszUTFCode = NULL;
+	return result;
+}
